@@ -34,10 +34,10 @@ float h = 80;
     const char* mqtt_username = "zeus"; 
   // Secret MQTT
     const char* mqtt_password = "paulo3034605";
-  // Topico Livingroom Humidity
-    const char* humidity_topic = "home/livingroom/humidity";
   // Cliente
     const char* clientID = "client_livingroom"; 
+  // Topico Livingroom Humidity
+    const char* humidity_topic = "home/livingroom/humidity";
   // Topico Livingroom Temperature
     const char* temperature_topic = "home/livingroom/temperature";
 
@@ -53,11 +53,21 @@ float h = 80;
 // Instancias -------------------------------------------
   WiFiClient wifiClient;
   //WiFiClientSecure wifiClient;
-  PubSubClient client(mqtt_server, 1883, wifiClient); 
+  PubSubClient client(mqtt_server ,1883, wifiClient); 
   //PubSubClient client(mqtt_server, mqtt_port, wifiClient);
 
 // Funcoes Genericas ------------------------------------
 void connect_MQTT(){
+  if (client.connect(clientID, mqtt_username, mqtt_password)) {
+    Serial.println("Connected to MQTT Broker!");
+  }
+  else {
+    Serial.println("Connection to MQTT Broker failed...");
+    connect_MQTT();
+  }
+}
+
+void wificonnect(){
   Serial.print("Connecting to ");
   Serial.println(ssid);
   // Connect to the WiFi
@@ -72,28 +82,14 @@ void connect_MQTT(){
   Serial.println("WiFi connected");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-
-  
-  // If the connection is failing, make sure you are using the correct MQTT Username and Password (Setup Earlier in the Instructable)
-  Serial.print("clientID: ");
-  Serial.println(clientID);
-  Serial.print("mqtt_username: ");
-  Serial.println(mqtt_username);
-  Serial.print("mqtt_password: ");
-  Serial.println(mqtt_password);
-  
-  if (client.connect(clientID, mqtt_username, mqtt_password)) {
-    Serial.println("Connected to MQTT Broker!");
-  }
-  else {
-    Serial.println("Connection to MQTT Broker failed...");
-  }
-  
 }
 
 
 void setup() {
   Serial.begin(9600);
+
+  wificonnect();
+  
   dht.begin();
  
 }
