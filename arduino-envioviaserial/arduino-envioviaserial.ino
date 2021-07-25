@@ -24,8 +24,9 @@ String data = "";
 
 void setup() {
   Serial.begin(9600);
-  Wire.begin(8);                // join i2c bus with address #8
-  Wire.onRequest(requestEvent); // register event
+  Wire.begin(0x08);                // join i2c bus with address #8
+    Wire.onRequest(receiveEvent); // register event
+  //Wire.onRequest(requestEvent); // register event
   //Iniclaiza o sensor DHT
   dht.begin();
 }
@@ -38,16 +39,24 @@ void loop() {
 
 // function that executes whenever data is requested by master
 // this function is registered as an event, see setup()
-void requestEvent() {
+//void requestEvent() {
+  void receiveEvent(){
   data = "";
   //Leitura da umidade
   float h = dht.readHumidity();
   //Leitura da temperatura (Celsius)
   float t = dht.readTemperature();
-  data = (String) h + ";" + (String) t + ".";
+  data = String(h) + ';' + String(t) + '.';
+  char* buf = (char*) malloc(sizeof(char)*data.length()+1);
 
   Serial.println(data);
-  Wire.write(data.c_str());
+  //Wire.write(data.c_str());
+
+  data.toCharArray(buf, data.length()+1);
+  Serial.print("Buf:");
+  Serial.println(buf);
+  Wire.write(buf);
+  free(buf);
   //Wire.write("hello "); // respond with message of 6 bytes
   // as expected by master
 }

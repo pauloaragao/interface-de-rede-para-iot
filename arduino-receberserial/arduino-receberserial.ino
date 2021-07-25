@@ -12,7 +12,7 @@
 
 #include <Wire.h>
 
-char c;
+String data = "";
 
 void setup() {
   Wire.begin();        // join i2c bus (address optional for master)
@@ -21,11 +21,24 @@ void setup() {
 
 
 void loop() {
-  Wire.requestFrom(8, 6);    // request 6 bytes from slave device #8
+  Wire.requestFrom(0x08, 12);    // request 6 bytes from slave device #8
 
-  while (Wire.available()) { // slave may send less than requested
+   //Wire.beginTransmission(0x08);
+  data = "";                     // string para armazenar bytes enviados pelo slave
+  while( Wire.available()){
+    data += (String)Wire.read();
+  }
+  Serial.print(". Resposta do slave ==> ");
+  Serial.print(data);
+  Serial.println("(FIM)");
+  Serial.println("");
+
+
+
+  //Wire.endTransmission(0x08);
+  /*while (Wire.available()) { // slave may send less than requested
     c = Wire.read(); // receive a byte as character
   }
-  Serial.println(c);         // print the character
-  delay(2000);
+  Serial.println(c);         // print the character*/
+  delay(4000);
 }
