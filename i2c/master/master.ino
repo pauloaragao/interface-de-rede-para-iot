@@ -13,7 +13,7 @@ void setup() {
 }
 
 void loop() {
-  Wire.requestFrom(slaveAdress, 4);    // request 6 bytes from slave device #8
+  Wire.requestFrom(slaveAdress, 12);    // request 6 bytes from slave device #8
 
    myString = "";                     // string para armazenar bytes enviados pelo slave
   while(Wire.available())    // slave may send less than requested
