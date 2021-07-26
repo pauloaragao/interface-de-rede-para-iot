@@ -4,9 +4,8 @@
  * 07/2021 - @pauloaragaoo
  * Historico
  */
-int i = 0;
-float t = 20;
-float h = 80;
+int i;
+String t, h;
 
 
 // Bibliotecas ------------------------------------------
@@ -17,7 +16,7 @@ float h = 80;
   #include <WiFiClientSecure.h> //Conexão segura ao broker
   #include "WebServer.h" //Servidor http do ESP32
   #include "HTTPClient.h"
-  //#include "TimeLib.h"
+  #include "Wire.h"
 
 // Wi-Fi ------------------------------------------------
   const char* ssid = "YepNET Cavalo de Troia";                
@@ -26,6 +25,8 @@ float h = 80;
 // Constantes -------------------------------------------
   // DHT22
     #define DHTPIN 4  // Pino conectado ao sensor DHT
+  // Endereco do Slave I2C
+    #define slaveAdress 0x08
   // Broker
     const char* mqtt_server = "192.168.3.20";  
   // Porta
@@ -43,7 +44,7 @@ float h = 80;
 
 
 // Variaveis globais ------------------------------------
-
+  String myString;
 
 // Temporario para teste ------------------------------------
   #define DHTTYPE DHT22  // DHT11 or DHT22
@@ -86,8 +87,8 @@ void wificonnect(){
 
 
 void setup() {
-  Serial.begin(9600);
-
+  Serial.begin(115200);
+  Wire.begin(); // ingressa ao barramento I2C
   wificonnect();
   
   dht.begin();
@@ -98,24 +99,54 @@ void loop() {
   connect_MQTT();
 
   Serial.setTimeout(2000);
-  
+  solicitandoSlave();
+  //separarString();
   //float h = dht.readHumidity();
   //float t = dht.readTemperature();
-  h = h + 0.01;
-  t = t + 0.01;
-
+  //Serial.print(myString);
   
-  Serial.print("Humidity: ");
+  /*Serial.print("Humidity: ");
   Serial.print(h);
   Serial.println(" %");
   Serial.print("Temperature: ");
   Serial.print(t);
-  Serial.println(" *C");
+  Serial.println(" *C");*/
+
+  int tEntrada = myString.length();
+  char separator[] = ";";
+  Serial.print("Tamanho Entrada: ");
+  Serial.println(tEntrada);
+
+  char char_array[tEntrada + 1];
+
+  // copying the contents of the 
+  // string to char array 
+  strcpy(char_array, myString.c_str());
+  char *token = NULL;
+  token = strtok(char_array, separator);
+  
+  //Serial.print("Token: ");
+  //Serial.println(token);
+
+  // Find any more?
+   while(token != NULL)
+   { 
+     h = token;
+     String hs="Hum: "+String(token)+" % ";
+     Serial.println(hs);
+     token = strtok(NULL, separator);
+     t = token;
+     String ts="Temp: "+String(token)+" C ";
+     Serial.println(ts);
+     token = strtok(NULL, separator);
+      
+   } 
+
 
 
   // MQTT can only transmit strings
-  String hs="Hum: "+String((float)h)+" % ";
-  String ts="Temp: "+String((float)t)+" C ";
+  //String hs="Hum: "+String((float)h)+" % ";
+  //String ts="Temp: "+String((float)t)+" C ";
 
   // PUBLISH to the MQTT Broker (topic = Temperature, defined at the beginning)
   if (client.publish(temperature_topic, String(t).c_str())) {
@@ -145,3 +176,60 @@ void loop() {
   client.disconnect();  // disconnect from the MQTT broker
   delay(1000*30);       // print new values every 1 Minute
 }
+
+void solicitandoSlave(){
+  Wire.requestFrom(slaveAdress, 11);    // request 6 bytes from slave device #8
+
+   myString = "";                     // string para armazenar bytes enviados pelo slave
+  while(Wire.available())    // slave may send less than requested
+  {
+    char c = Wire.read();    // receive a byte as character
+    //Serial.print(c);         // print the character
+    if ( c != NULL)
+      myString += c;
+  }
+
+  delay(500);
+  Serial.print(". Resposta do slave ==> ");
+  Serial.print(myString);
+  Serial.println("");
+  delay(2000);
+}
+/*
+void separarString(){
+  int i = 0;
+  int tEntrada = myString.length();
+  char separator[] = ";";
+  Serial.print("Tamanho Entrada: ");
+  Serial.println(tEntrada);
+
+  char char_array[tEntrada + 1];
+
+  // copying the contents of the 
+  // string to char array 
+  strcpy(char_array, myString.c_str());
+  char *token;
+  token = strtok(char_array, separator);
+
+  //Serial.print("Token: ");
+  //Serial.println(token);
+
+  // Find any more?
+   while(token != NULL)
+   {  
+     token = strtok(NULL, separator);
+     Serial.print("Token quebrado: ");
+     Serial.println(token);
+     if ( i == 0 ){
+      h = float(token);
+      i = 1;
+     }
+     if ( i == 1 ){
+      t = float(token);
+      i = 2;
+     }
+     if (i == 2){
+      i = 0
+     }
+   } 
+}*/

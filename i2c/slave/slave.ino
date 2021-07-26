@@ -39,7 +39,7 @@ void lerDHT(){
   float h = dht.readHumidity();
   //Leitura da temperatura (Celsius)
   float t = dht.readTemperature();
-  myString = (String) h + ";" + (String) t + "@";
+  myString = (String) h + ";" + (String) t;
 
   Serial.println(myString);
   return myString;
